@@ -1,21 +1,5 @@
 class Person < ActiveRecord::Base
-  validates :name, :presence => true
-
-  after_save :make_marriage_reciprocal
-
-  def spouse
-    if spouse_id.nil?
-      nil
-    else
-      Person.find(spouse_id)
-    end
-  end
-
-private
-
-  def make_marriage_reciprocal
-    if spouse_id_changed?
-      spouse.update(:spouse_id => id)
-    end
-  end
+  has_one :spouse, class_name: "Person", foreign_key: "spouse_id"
+  has_many :parents, class_name: "Person", through: "parents_children", foreign_key: "parent_id"
+  has_many :children, class_name: "Person", through: "parents_children", foreign_key: "child_id"
 end
