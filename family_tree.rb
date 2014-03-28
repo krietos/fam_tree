@@ -35,6 +35,7 @@ def menu
     puts "Press f to see who someone's full-siblings are."
     puts "Press au to see who someone's aunts and uncles are."
     puts "Enter 'cousin' to see who someone's cousins are."
+    puts "Press d to divorce a couple."
     puts 'Press e to exit.'
     choice = gets.chomp
 
@@ -65,6 +66,8 @@ def menu
       show_aunts_uncles
     when 'cousin'
       show_cousins
+    when 'd'
+      make_divorce
     when 'e'
       exit
     end
@@ -215,6 +218,35 @@ def show_cousins
   puts "The cousin(s) of #{person.name}: #{cousins_names.join(' and ')}"
 end
 
+def make_divorce
+  list
+  puts "Enter the number of the first spouse."
+  person = Person.find(gets.chomp)
+  spouse = Person.find(person.spouse_id)
+  if spouse.nil?
+    puts "#{person.name} is not presently married."
+  else
+    marriage = Marriage.where({:person1_id => person.id, :person2_id => spouse.id, :divorced => false}).first
+    if marriage.nil?
+      marriage = Marriage.where({:person1_id => spouse.id, :person2_id => person.id, :divorce => false}).first
+    end
+    puts "#{person.name} is currently married to #{spouse.name}."
+    puts "Should they divorce? (Y/N)"
+    divorce = gets.chomp.downcase
+    case divorce
+    when 'y'
+      marriage.update({:divorced => true})
+      spouse.update({:spouse_id => nil})
+      person.update({:spouse_id => nil})
+      puts "#{person.name} is no longer married to #{spouse.name}."
+    when 'n'
+      puts "We wish #{person.name} and #{spouse.name} the best of luck with their relationship."
+    else
+      puts "Not a valid input."
+    end
+  end
+end
+
 def list
   puts 'Here are all your relatives:'
   people = Person.all
@@ -233,6 +265,14 @@ def show_marriage
   else
     found_spounse = person.spouse
     puts person.name + " is married to " + found_spounse.name + "."
+  end
+  previous_spouses = person.previous_marriages
+  previous_spouse_names = []
+  previous_spouses.each do |spouse|
+    previous_spouse_names << spouse.name
+  end
+  if previous_spouses.length > 0
+    puts person.name + " was previously married to: #{previous_spouse_names.join(' and ')}"
   end
 end
 
