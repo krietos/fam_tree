@@ -90,10 +90,14 @@ def add_marriage
   list
   spouse1 = assign_spouse('first')
   spouse2 = assign_spouse('second')
-  marriage = Marriage.create({:divorced => false, :person1_id => spouse1.id, :person2_id => spouse2.id})
-  spouse1.update({:spouse_id => spouse2.id})
-  spouse2.update({:spouse_id => spouse1.id})
-  puts spouse1.name + " is now married to " + spouse2.name + "."
+  if spouse1.spouse_id == nil && spouse2.spouse_id == nil
+    marriage = Marriage.create({:divorced => false, :person1_id => spouse1.id, :person2_id => spouse2.id})
+    spouse1.update({:spouse_id => spouse2.id})
+    spouse2.update({:spouse_id => spouse1.id})
+    puts spouse1.name + " is now married to " + spouse2.name + "."
+  else
+    puts "One of these people is already married."
+  end
 end
 
 def assign_spouse(number)
@@ -118,7 +122,7 @@ def add_parents
   #   child = Person.find_by_id(gets.chomp)
   #   fail_count += 1
   # end until child != nil
-  person = Person.validate_person("What is the number of the child?")
+  child = Person.validate_person("What is the number of the child?")
   continue = nil
   parents = []
   until continue == 'n'
