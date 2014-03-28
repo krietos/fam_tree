@@ -77,26 +77,48 @@ end
 def add_person
   puts 'What is the name of the family member?'
   name = gets.chomp
-  Person.create(:name => name)
-  puts name + " was added to the family tree.\n\n"
+  person = Person.new(:name => name)
+  if person.save
+    puts name + " was added to the family tree.\n\n"
+  else
+    puts 'Please enter a name.'
+    add_person
+  end
 end
 
 def add_marriage
   list
-  puts 'What is the number of the first spouse?'
-  spouse1 = Person.find(gets.chomp)
-  puts 'What is the number of the second spouse?'
-  spouse2 = Person.find(gets.chomp)
+  spouse1 = assign_spouse('first')
+  spouse2 = assign_spouse('second')
   marriage = Marriage.create({:divorced => false, :person1_id => spouse1.id, :person2_id => spouse2.id})
   spouse1.update({:spouse_id => spouse2.id})
   spouse2.update({:spouse_id => spouse1.id})
   puts spouse1.name + " is now married to " + spouse2.name + "."
 end
 
+def assign_spouse(number)
+  puts "What is the number of the #{number} spouse?"
+  spouse = Person.find_by_id(gets.chomp)
+  if spouse != nil
+    return spouse
+  else
+    puts 'Enter a valid choice'
+    assign_spouse(number)
+  end
+end
+
 def add_parents
   list
-  puts 'What is the number of the child?'
-  child = Person.find(gets.chomp)
+  # fail_count = 0
+  # begin
+  #   if fail_count > 0
+  #     puts 'That was not a valid input.'
+  #   end
+  #   puts 'What is the number of the child?'
+  #   child = Person.find_by_id(gets.chomp)
+  #   fail_count += 1
+  # end until child != nil
+  person = Person.validate_person("What is the number of the child?")
   continue = nil
   parents = []
   until continue == 'n'
@@ -114,8 +136,7 @@ end
 
 def show_parents
   list
-  puts "Enter the number of the relative and I'll show you his or her parents."
-  person = Child.find(gets.chomp)
+  person = Child.validate_person("Enter the number of the relative and I'll show you his or her parents.")
   parents = person.parents
   if parents[0].nil?
     puts person.name + "'s parents haven't been added to the family tree."
@@ -131,8 +152,7 @@ end
 
 def show_grandparents
   list
-  puts "Enter the number of the relative and I'll show you their grandparents."
-  person = Child.find(gets.chomp)
+  person = Child.validate_person("Enter the number of the relative and I'll show you their grandparents.")
   grandparents = person.grandparents
   grandparent_names = []
   grandparents.each do |grandparent|
@@ -143,8 +163,7 @@ end
 
 def show_children
   list
-  puts "Enter the number of the relative and I'll show you his or her children."
-  person = Parent.find(gets.chomp)
+  person = Parent.validate_person("Enter the number of the relative and I'll show you his or her children.")
   children = person.childs
   if children[0].nil?
     puts person.name + "'s children haven't been added to the family tree."
@@ -160,8 +179,7 @@ end
 
 def show_grandchildren
   list
-  puts "Enter the number of the relative and I'll show you their grandchildren."
-  person = Parent.find(gets.chomp)
+  person = Parent.validate_person("Enter the number of the relative and I'll show you their grandchildren.")
   grandchildren = person.grandchildren
   grandchildren_names = []
   grandchildren.each do |grandchild|
@@ -172,8 +190,7 @@ end
 
 def show_half_siblings
   list
-  puts "Enter the number of the relative and I'll show you their half-siblings."
-  person = Child.find(gets.chomp)
+  person = Child.validate_person("Enter the number of the relative and I'll show you their half-siblings.")
   half_siblings = person.half_siblings
   half_siblings_names = []
   half_siblings.each do |half_sibling|
@@ -184,8 +201,7 @@ end
 
 def show_full_siblings
   list
-  puts "Enter the number of the relative and I'll show you their full-siblings."
-  person = Child.find(gets.chomp)
+  person = Child.validate_person("Enter the number of the relative and I'll show you their full-siblings.")
   full_siblings = person.full_siblings
   full_siblings_names = []
   full_siblings.each do |full_sibling|
@@ -196,8 +212,7 @@ end
 
 def show_aunts_uncles
   list
-  puts "Enter the number of the relative and I'll show you their uncles and aunts."
-  person = Child.find(gets.chomp)
+  person = Child.validate_person("Enter the number of the relative and I'll show you their uncles and aunts.")
   aunts_uncles = person.aunts_uncles
   aunts_uncles_names = []
   aunts_uncles.each do |aunt_uncle|
@@ -208,8 +223,7 @@ end
 
 def show_cousins
   list
-  puts "Enter the number of the relative and I'll show you their cousins."
-  person = Child.find(gets.chomp)
+  person = Child.validate_person("Enter the number of the relative and I'll show you their cousins.")
   cousins = person.cousins
   cousins_names = []
   cousins.each do |cousin|
@@ -220,8 +234,7 @@ end
 
 def make_divorce
   list
-  puts "Enter the number of the first spouse."
-  person = Person.find(gets.chomp)
+  person = Person.validate_person("Enter the number of the first spouse.")
   spouse = Person.find(person.spouse_id)
   if spouse.nil?
     puts "#{person.name} is not presently married."
@@ -258,8 +271,7 @@ end
 
 def show_marriage
   list
-  puts "Enter the number of the relative and I'll show you who they're married to."
-  person = Person.find(gets.chomp)
+  person = Person.validate_person("Enter the number of the relative and I'll show you who they're married to.")
   if person.spouse_id.nil?
     puts person.name + " is single and lookin' to mingle."
   else
